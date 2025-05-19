@@ -1,0 +1,6 @@
+# Ignore virtual environment
+venv/
+# Ignore PDF files
+*.pdf
+# Ignore macOS system files
+.DS_Store
