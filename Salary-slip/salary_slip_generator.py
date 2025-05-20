@@ -73,7 +73,14 @@ def generate_pdf_from_html(employee_data, template_path, output_path):
         salary_to_be_paid = 0
     salary_to_be_paid_fmt = f"Rs.{float(salary_to_be_paid):,.2f}"
     html_content = html_content.replace('{{total_net_pay}}', salary_to_be_paid_fmt)
-    html_content = html_content.replace('{{basic}}', salary_to_be_paid_fmt)
+    
+    # Use 'Basic' column for {{basic}}
+    basic_val = employee_data.get('Basic', 0)
+    if pd.isna(basic_val):
+        basic_val = 0
+    basic_fmt = f"Rs.{float(basic_val):,.2f}"
+    html_content = html_content.replace('{{basic}}', basic_fmt)
+    
     html_content = html_content.replace('{{gross_earnings}}', salary_to_be_paid_fmt)
     html_content = html_content.replace('{{total_net_payable}}', salary_to_be_paid_fmt)
     html_content = html_content.replace('{{amount_in_words}}', num2words(int(round(salary_to_be_paid)), lang='en_IN').replace('euro', 'rupees').replace('Rupees', 'rupees').title() + ' Only')
@@ -98,14 +105,19 @@ def generate_pdf_from_html(employee_data, template_path, output_path):
     html_content = html_content.replace('{{employee_id}}', str(get_flexible_column(employee_data, ['Employee ID', 'Emp ID', 'ID'])))
 
     # Earnings (other than basic)
-    html_content = html_content.replace('{{house_rent_allowance}}', f"Rs.{float(employee_data.get('House Rent Allowance', 0)):.2f}")
-    html_content = html_content.replace('{{conveyance_allowance}}', f"Rs.{float(employee_data.get('Conveyance Allowance', 0)):.2f}")
-    html_content = html_content.replace('{{special_allowance}}', f"Rs.{float(employee_data.get('Special Allowance', 0)):.2f}")
+    def format_rs(val):
+        try:
+            return f"Rs.{float(val):,.2f}"
+        except Exception:
+            return "Rs.0.00"
+    html_content = html_content.replace('{{house_rent_allowance}}', format_rs(employee_data.get('House Rent Allowance', 0)))
+    html_content = html_content.replace('{{conveyance_allowance}}', format_rs(employee_data.get('Conveyance Allowance', 0)))
+    html_content = html_content.replace('{{special_allowance}}', format_rs(employee_data.get('Special Allowance', 0)))
 
     # Deductions
-    html_content = html_content.replace('{{income_tax}}', f"Rs.{float(employee_data.get('Income Tax', 0)):.2f}")
-    html_content = html_content.replace('{{provident_fund}}', f"Rs.{float(employee_data.get('Provident Fund', 0)):.2f}")
-    html_content = html_content.replace('{{total_deductions}}', f"Rs.{float(employee_data.get('Total Deductions', 0)):.2f}")
+    html_content = html_content.replace('{{income_tax}}', format_rs(employee_data.get('Income Tax', 0)))
+    html_content = html_content.replace('{{provident_fund}}', format_rs(employee_data.get('Provident Fund', 0)))
+    html_content = html_content.replace('{{total_deductions}}', format_rs(employee_data.get('Total Deductions', 0)))
 
     # Convert HTML to PDF using WeasyPrint
     HTML(string=html_content, base_url=os.getcwd()).write_pdf(output_path)
