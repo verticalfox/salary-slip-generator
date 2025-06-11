@@ -236,14 +236,26 @@
     </div>
   </div>
 
-  <div class="details">
-    <div class="details-box">
-      <div class="details-row"><div class="label">Designation</div><div class="value">{{designation}}</div></div>
-      <div class="details-row"><div class="label">Bank Account No.</div><div class="value">{{bank_account_number}}</div></div>
+  <div class="employee-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; grid-row-gap: 8px; grid-column-gap: 16px; background: #fff; border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 18px 28px; margin: 24px 0 18px 0;">
+    <div style="display: flex; align-items: center; font-size: 16px;">
+      <span style="font-weight: bold; color: #333;">Designation</span>
+      <span style="margin: 0 6px; color: #333;">:</span>
+      <span style="font-weight: 400; color: #222;">{{designation}}</span>
     </div>
-    <div class="details-box">
-      <div class="details-row"><div class="label">Join Date</div><div class="value">{{join_date}}</div></div>
-      <div class="details-row"><div class="label">Bank Name</div><div class="value">{{bank_name}}</div></div>
+    <div style="display: flex; align-items: center; font-size: 16px;">
+      <span style="font-weight: bold; color: #333;">Join Date</span>
+      <span style="margin: 0 6px; color: #333;">:</span>
+      <span style="font-weight: 400; color: #222;">{{join_date}}</span>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 16px;">
+      <span style="font-weight: bold; color: #333;">Bank Account Number</span>
+      <span style="margin: 0 6px; color: #333;">:</span>
+      <span style="font-weight: 400; color: #222;">{{bank_account_number}}</span>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 16px;">
+      <span style="font-weight: bold; color: #333;">Bank Name</span>
+      <span style="margin: 0 6px; color: #333;">:</span>
+      <span style="font-weight: 400; color: #222;">{{bank_name}}</span>
     </div>
   </div>
 
@@ -278,17 +290,25 @@
     </div>
   </div>
 
-  <div class="bottom-bar">
-    <div class="left">
-      Total Net Payable<br><small>Gross Earnings – Total Deductions</small>
+  <div class="net-pay-section" style="margin-top: 32px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; background: #f7faf7; border: 1px solid #e0e0e0; border-radius: 14px; padding: 18px 28px 14px 28px; margin-bottom: 18px;">
+      <div>
+        <div style="font-size: 22px; font-weight: bold; color: #111;">TOTAL NET PAYABLE</div>
+        <div style="font-size: 16px; color: #888; margin-top: 2px;">Gross Earnings - Total Deductions</div>
+      </div>
+      <div style="font-size: 24px; font-weight: bold; color: #219150; background: #eafbee; border-radius: 8px; padding: 8px 24px; min-width: 180px; text-align: right;">{{total_net_pay}}</div>
     </div>
-    <div class="right">{{total_net_payable}}</div>
-  </div>
 
-  <footer>
-    Amount In Words : Rupees {{amount_in_words}} <br><br>
-    -- This is a system-generated document. --
-  </footer>
+    <div style="text-align: right; font-size: 15px; color: #222; margin-bottom: 8px;">
+      Amount In Words : <span style="font-weight: 500;">Indian Rupee Seventy-Five Thousand Only</span>
+    </div>
+
+    <hr style="border: none; border-top: 1.5px dotted #bbb; margin: 18px 0 24px 0; width: 100%;">
+
+    <div style="text-align: center; color: #888; font-size: 14px; margin-top: 10px;">
+      -- This is a system-generated document. --
+    </div>
+  </div>
 
 </body>
 </html>
