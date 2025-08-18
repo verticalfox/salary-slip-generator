@@ -53,7 +53,8 @@ def generate_pdf_from_html(employee_data, template_path, output_path):
 
     # Replace placeholders with actual data, handling missing values
     html_content = html_content.replace('{{employee_name}}', str(employee_data.get('Name', 'N/A')))
-    html_content = html_content.replace('{{employee_id}}', str(employee_data.get('Employee ID', '')))
+    # Remove this line to avoid overwriting the formatted employee_id
+    # html_content = html_content.replace('{{employee_id}}', str(employee_data.get('Employee ID', '')))
     html_content = html_content.replace('{{pay_period}}', str(employee_data.get('Month', 'N/A')))
 
     # Calculate pay date as the last day of the month if not present
@@ -86,13 +87,23 @@ def generate_pdf_from_html(employee_data, template_path, output_path):
     html_content = html_content.replace('{{amount_in_words}}', num2words(int(round(salary_to_be_paid)), lang='en_IN').replace('euro', 'rupees').replace('Rupees', 'rupees').title() + ' Only')
 
     # Paid days and LOP days
-    html_content = html_content.replace('{{paid_days}}', str(employee_data.get('No of days worked', '')))
+    paid_days_val = employee_data.get('No of days worked', '')
+    if pd.isna(paid_days_val) or paid_days_val == '':
+        paid_days_str = ''
+    else:
+        try:
+            paid_days_str = str(int(float(paid_days_val)))
+        except Exception:
+            paid_days_str = str(paid_days_val)
+    html_content = html_content.replace('{{paid_days}}', paid_days_str)
     html_content = html_content.replace('{{lop_days}}', '0')
 
     # Details section (flexible matching)
     # Format join date to only show date part
     join_date_val = get_flexible_column(employee_data, ['Join Date'])
-    if hasattr(join_date_val, 'strftime'):
+    if pd.isna(join_date_val) or join_date_val in [None, '', 'nan', 'NaT']:
+        join_date_str = 'N/A'
+    elif hasattr(join_date_val, 'strftime'):
         join_date_str = join_date_val.strftime('%Y-%m-%d')
     elif isinstance(join_date_val, str) and ' ' in join_date_val:
         join_date_str = join_date_val.split(' ')[0]
@@ -102,7 +113,16 @@ def generate_pdf_from_html(employee_data, template_path, output_path):
     html_content = html_content.replace('{{bank_account_number}}', str(get_flexible_column(employee_data, ['Bank Account Number', 'Bank Account No.'])))
     html_content = html_content.replace('{{join_date}}', join_date_str)
     html_content = html_content.replace('{{bank_name}}', str(get_flexible_column(employee_data, ['Bank Name'])))
-    html_content = html_content.replace('{{employee_id}}', str(get_flexible_column(employee_data, ['Employee ID', 'Emp ID', 'ID'])))
+    # Employee ID as integer if possible
+    emp_id_val = get_flexible_column(employee_data, ['Employee ID', 'Emp ID', 'ID'])
+    if pd.isna(emp_id_val) or emp_id_val == '':
+        emp_id_str = ''
+    else:
+        try:
+            emp_id_str = str(int(float(emp_id_val)))
+        except Exception:
+            emp_id_str = str(emp_id_val)
+    html_content = html_content.replace('{{employee_id}}', emp_id_str)
 
     # Earnings (other than basic)
     def format_rs(val):
