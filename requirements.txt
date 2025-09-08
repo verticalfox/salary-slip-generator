@@ -1,0 +1,6 @@
+weasyprint
+pandas
+num2words
+openpyxl
+reportlab
+pdfkit

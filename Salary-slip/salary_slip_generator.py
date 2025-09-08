@@ -8,8 +8,16 @@ import pdfkit
 from num2words import num2words
 from datetime import datetime
 import calendar
-from weasyprint import HTML
 import os
+import argparse
+
+try:
+    # Optional dependency at runtime; container has it, local may not
+    from weasyprint import HTML  # type: ignore
+    _WEASYPRINT_AVAILABLE = True
+except Exception:
+    HTML = None  # type: ignore
+    _WEASYPRINT_AVAILABLE = False
 
 # Function to generate PDF
 def generate_pdf(employee_data, filename, month):
@@ -140,6 +148,8 @@ def generate_pdf_from_html(employee_data, template_path, output_path):
     html_content = html_content.replace('{{total_deductions}}', format_rs(employee_data.get('Total Deductions', 0)))
 
     # Convert HTML to PDF using WeasyPrint
+    if not _WEASYPRINT_AVAILABLE:
+        raise RuntimeError("WeasyPrint not available in this environment")
     HTML(string=html_content, base_url=os.getcwd()).write_pdf(output_path)
 
 def get_flexible_column(employee_data, possible_names):
@@ -159,20 +169,57 @@ def read_excel(file_path):
 
 # Main function
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python salary_slip_generator.py <path_to_excel_file>")
-        sys.exit(1)
-    
-    file_path = sys.argv[1]
-    df = read_excel(file_path)
-    print("Column names:", df.columns)  # Debugging line
-    for index, row in df.iterrows():
-        # Get the month from the 'Month' column, sanitize for filename
+    parser = argparse.ArgumentParser(description="Generate Salary Slip PDFs from an Excel file")
+    parser.add_argument("excel_file", help="Path to the Excel file containing employee data")
+    parser.add_argument("--engine", choices=["auto", "weasyprint", "reportlab"], default="auto",
+                        help="PDF rendering engine. 'auto' tries WeasyPrint then falls back to ReportLab")
+    parser.add_argument("--template", default='Sample Salary Slip  copy.html',
+                        help="Path to HTML template (used with WeasyPrint)")
+    parser.add_argument("--out-dir", default='.', help="Directory to write PDFs to")
+    args = parser.parse_args()
+
+    df = read_excel(args.excel_file)
+    print("Column names:", df.columns)
+
+    # Resolve engine choice
+    preferred_engine = args.engine
+    use_weasy = False
+    if preferred_engine == "weasyprint":
+        use_weasy = True
+        if not _WEASYPRINT_AVAILABLE:
+            print("WeasyPrint not available; please install it or use --engine reportlab", file=sys.stderr)
+            sys.exit(2)
+    elif preferred_engine == "reportlab":
+        use_weasy = False
+    else:
+        use_weasy = _WEASYPRINT_AVAILABLE
+
+    # Ensure output directory exists
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    # Try to generate using chosen engine; in 'auto' we silently fall back to reportlab on error
+    for _, row in df.iterrows():
         month_value = str(row.get('Month', '')).strip().replace(' ', '_')
-        name_value = str(row['Name']).strip().replace(' ', '_')
-        filename = f"Salary_Slip_{name_value}_{month_value}.pdf"
-        template_path = 'Sample Salary Slip  copy.html'
-        generate_pdf_from_html(row, template_path, filename)
+        name_value = str(row.get('Name', '')).strip().replace(' ', '_')
+        filename = os.path.join(args.out_dir, f"Salary_Slip_{name_value}_{month_value}.pdf")
+
+        if use_weasy:
+            try:
+                generate_pdf_from_html(row, args.template, filename)
+                continue
+            except Exception as exc:
+                if preferred_engine == "weasyprint":
+                    raise
+                print(f"WeasyPrint failed ({exc}). Falling back to ReportLab table PDF...", file=sys.stderr)
+
+        # Fallback to basic ReportLab PDF summary
+        # Try to infer month name for the summary row
+        try:
+            month_column = next(col for col in row.index if 'Monthly salary' in col)
+            month_for_summary = month_column.split()[-1]
+        except StopIteration:
+            month_for_summary = str(row.get('Month', ''))
+        generate_pdf(row, filename, month_for_summary)
 
 if __name__ == "__main__":
     main() 

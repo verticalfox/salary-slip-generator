@@ -37,16 +37,34 @@ Generate beautiful, professional salary slip PDFs for employees from an Excel fi
 2. **Customize the HTML template:**
    - Edit `Sample Salary Slip  copy.html` to match your branding and fields.
    - Place your logo in the `assets/` folder and reference it in the template.
-3. **Run the generator:**
+3. **Run the generator (local):**
    ```sh
-   python Salary-slip/salary_slip_generator.py <path_to_excel_file>
+   python Salary-slip/salary_slip_generator.py <path_to_excel_file> [--engine auto|weasyprint|reportlab] [--template path/to/template.html] [--out-dir output]
    ```
-   Example:
+   Examples:
    ```sh
-   python Salary-slip/salary_slip_generator.py /path/to/your/salary_data.xlsx
+   # Auto mode (tries WeasyPrint, falls back to ReportLab)
+   python Salary-slip/salary_slip_generator.py ./salary_data.xlsx --engine auto
+
+   # Force ReportLab only (no native deps needed)
+   python Salary-slip/salary_slip_generator.py ./salary_data.xlsx --engine reportlab
    ```
 4. **Find your PDFs:**
    - Generated files will be named like `Salary_Slip_<EmployeeName>_<Month>.pdf` in the project directory.
+
+## Run with Docker (recommended for consistent results)
+1. Build the image:
+   ```sh
+   docker build -t salary-slip-generator:latest .
+   ```
+2. Generate PDFs (mount your Excel file):
+   ```sh
+   ./run_docker.sh --build /absolute/path/to/salary_data.xlsx --engine auto
+   # or if already built
+   ./run_docker.sh /absolute/path/to/salary_data.xlsx --engine auto
+   ```
+   - The container runs from `/app` so the template path works out of the box.
+   - PDFs will be written back into your repo directory on the host.
 
 ## Example Output
 ![Sample Salary Slip](assets/sample_salary_slip_screenshot.png)
